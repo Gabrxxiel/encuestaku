@@ -21,7 +21,15 @@ module.exports = (req, res) => {
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     res.statusCode = 401;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Contraseña incorrecta' }));
+    res.end(JSON.stringify({
+      error: 'Contraseña incorrecta',
+      debug: {
+        receivedPassword: password || null,
+        receivedBodyType: typeof req.body,
+        envVarIsSet: Boolean(process.env.ADMIN_PASSWORD),
+        envVarLength: (process.env.ADMIN_PASSWORD || '').length,
+      },
+    }));
     return;
   }
 
