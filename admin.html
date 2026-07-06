@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdminKU · Dashboard Encuesta de Satisfacción</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #e8ff00;
+      --accent-dim: rgba(232,255,0,0.10);
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-dim: #444;
+      --error: #ff5c5c;
+      --success: #4cff91;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh; padding: 40px 20px 80px;
+    }
+    .wrap { width: 100%; max-width: 1000px; margin: 0 auto; }
+    h1, h2 { font-family: 'Space Grotesk', sans-serif; }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    header.top h1 { font-size: clamp(20px, 4vw, 28px); }
+    .btn {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 16px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn.primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); }
+    .btn.primary:hover { opacity: 0.88; color: #0f0f0f; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Login */
+    #login-screen {
+      max-width: 380px; margin: 100px auto; display: flex; flex-direction: column; gap: 18px;
+    }
+    #login-screen input {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; padding: 14px 16px; outline: none;
+    }
+    #login-screen input:focus { border-color: var(--accent); }
+    #login-error { font-size: 13px; color: var(--error); display: none; }
+
+    /* Sections */
+    section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-dim); padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 18px;
+    }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; color: var(--accent); }
+    .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+    .pill.low { background: rgba(255,92,92,0.12); color: var(--error); }
+    .pill.mid { background: rgba(255,200,0,0.12); color: #ffc800; }
+    .pill.high { background: rgba(76,255,145,0.12); color: var(--success); }
+    .comments { font-size: 12px; color: var(--text-muted); }
+    .comments div { margin-top: 4px; }
+    .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .table-wrap table { min-width: 600px; }
+
+    .dolor-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .dolor-bar-row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+    .dolor-bar-label { width: 190px; flex-shrink: 0; color: var(--text-muted); }
+    .dolor-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .dolor-bar-fill { height: 100%; background: var(--error); }
+    .dolor-bar-count { width: 24px; text-align: right; color: var(--text); font-weight: 600; }
+
+    #empty-state { color: var(--text-muted); font-size: 14px; padding: 20px 0; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; color: #000; padding: 0; }
+      .kpi-card, .table-wrap { border-color: #ccc; background: #fff; }
+      th { color: #555; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div>
+    <p class="eyebrow">ADMOSA · Acceso restringido</p>
+    <h1>AdminKU</h1>
+  </div>
+  <input type="password" id="password-input" placeholder="Contraseña" autocomplete="current-password" />
+  <button class="btn primary" id="login-btn">Entrar</button>
+  <p id="login-error">Contraseña incorrecta.</p>
+</div>
+
+<div class="wrap" id="dashboard" style="display:none">
+  <header class="top no-print">
+    <div>
+      <p class="eyebrow">ADMOSA · AdminKU</p>
+      <h1>Dashboard Encuesta de Satisfacción</h1>
+    </div>
+    <div class="actions">
+      <button class="btn" id="download-btn">Descargar CSV</button>
+      <button class="btn" id="print-btn">Guardar PDF</button>
+      <button class="btn" id="logout-btn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div id="content"></div>
+</div>
+
+<script>
+  const loginScreen  = document.getElementById('login-screen');
+  const dashboard    = document.getElementById('dashboard');
+  const content      = document.getElementById('content');
+  const passwordEl   = document.getElementById('password-input');
+  const loginBtn     = document.getElementById('login-btn');
+  const loginError   = document.getElementById('login-error');
+
+  let currentData = null;
+
+  function pct(n) { return `${Math.round(n * 100)}%`; }
+  function n1(n) { return Number.isFinite(n) ? n.toFixed(1) : '–'; }
+  function pillClass(v) { return v >= 4 ? 'high' : v >= 3 ? 'mid' : 'low'; }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  function render(data) {
+    currentData = data;
+    const g = data.resumenGeneral;
+
+    const resumenHtml = `
+      <section>
+        <p class="section-title">Resumen General</p>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-value">${g.totalRespuestas}</div><div class="kpi-label">Respuestas</div></div>
+          <div class="kpi-card"><div class="kpi-value">${n1(g.promedioGeneral)}</div><div class="kpi-label">Promedio General</div></div>
+          <div class="kpi-card"><div class="kpi-value">${n1(g.promedioSatisfaccion)}</div><div class="kpi-label">Satisfacción</div></div>
+          <div class="kpi-card"><div class="kpi-value">${n1(g.promedioTiempo)}</div><div class="kpi-label">Tiempo Resp.</div></div>
+          <div class="kpi-card"><div class="kpi-value">${n1(g.promedioCalidad)}</div><div class="kpi-label">Calidad</div></div>
+          <div class="kpi-card"><div class="kpi-value">${n1(g.promedioCapacitacion)}</div><div class="kpi-label">Capacitación</div></div>
+          <div class="kpi-card"><div class="kpi-value">${pct(g.pctSatisfechos)}</div><div class="kpi-label">Satisfechos (≥4)</div></div>
+          <div class="kpi-card"><div class="kpi-value">${pct(g.pctInsatisfechos)}</div><div class="kpi-label">En riesgo (&lt;3)</div></div>
+        </div>
+      </section>`;
+
+    const maxBajos = Math.max(1, ...data.puntosDeDolor.porDimension.map(d => d.bajos));
+    const dolorBars = data.puntosDeDolor.porDimension.map(d => `
+      <div class="dolor-bar-row">
+        <div class="dolor-bar-label">${esc(d.dimension)}</div>
+        <div class="dolor-bar-track"><div class="dolor-bar-fill" style="width:${(d.bajos / maxBajos) * 100}%"></div></div>
+        <div class="dolor-bar-count">${d.bajos}</div>
+      </div>`).join('');
+
+    const casosRows = data.puntosDeDolor.casos.length
+      ? data.puntosDeDolor.casos.map(c => `
+        <tr>
+          <td>${esc(c.marca)}</td>
+          <td>${esc(c.keyUser)}</td>
+          <td>${esc(c.canal)}</td>
+          <td>${esc(c.rol)}</td>
+          <td><span class="pill ${pillClass(c.promedio)}">${n1(c.promedio)}</span></td>
+          <td class="comments">${c.comentarios.map(t => `<div>“${esc(t)}”</div>`).join('') || '–'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="6" id="empty-state">Sin casos de riesgo por ahora 🎉</td></tr>`;
+
+    const dolorHtml = `
+      <section>
+        <p class="section-title">Puntos de Dolor</p>
+        <div class="dolor-bars">${dolorBars}</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Marca</th><th>Key User</th><th>Canal</th><th>Rol</th><th>Promedio</th><th>Comentarios</th></tr></thead>
+            <tbody>${casosRows}</tbody>
+          </table>
+        </div>
+      </section>`;
+
+    const marcaRows = data.reportePorMarca.map(m => `
+      <tr>
+        <td>${esc(m.marca)}</td>
+        <td>${esc(m.keyUser)}</td>
+        <td>${m.respuestas}</td>
+        <td><span class="pill ${pillClass(m.promedioSatisfaccion)}">${n1(m.promedioSatisfaccion)}</span></td>
+        <td><span class="pill ${pillClass(m.promedioTiempo)}">${n1(m.promedioTiempo)}</span></td>
+        <td><span class="pill ${pillClass(m.promedioCalidad)}">${n1(m.promedioCalidad)}</span></td>
+        <td><span class="pill ${pillClass(m.promedioCapacitacion)}">${n1(m.promedioCapacitacion)}</span></td>
+        <td><span class="pill ${pillClass(m.promedioGeneral)}">${n1(m.promedioGeneral)}</span></td>
+      </tr>`).join('');
+
+    const marcaHtml = `
+      <section>
+        <p class="section-title">Reporte por Marca</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Marca</th><th>Key User</th><th>Resp.</th><th>Satisf.</th><th>Tiempo</th><th>Calidad</th><th>Capacit.</th><th>General</th></tr></thead>
+            <tbody>${marcaRows}</tbody>
+          </table>
+        </div>
+      </section>`;
+
+    content.innerHTML = resumenHtml + dolorHtml + marcaHtml;
+  }
+
+  function csvEscape(v) {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }
+
+  function downloadCSV() {
+    if (!currentData) return;
+    const lines = [];
+
+    lines.push('RESUMEN GENERAL');
+    lines.push('Métrica,Valor');
+    const g = currentData.resumenGeneral;
+    lines.push(`Total Respuestas,${g.totalRespuestas}`);
+    lines.push(`Promedio General,${n1(g.promedioGeneral)}`);
+    lines.push(`Promedio Satisfacción,${n1(g.promedioSatisfaccion)}`);
+    lines.push(`Promedio Tiempo,${n1(g.promedioTiempo)}`);
+    lines.push(`Promedio Calidad,${n1(g.promedioCalidad)}`);
+    lines.push(`Promedio Capacitación,${n1(g.promedioCapacitacion)}`);
+    lines.push(`% Satisfechos,${pct(g.pctSatisfechos)}`);
+    lines.push(`% En riesgo,${pct(g.pctInsatisfechos)}`);
+    lines.push('');
+
+    lines.push('PUNTOS DE DOLOR');
+    lines.push('Dimensión,Respuestas <=3');
+    currentData.puntosDeDolor.porDimension.forEach(d => lines.push(`${csvEscape(d.dimension)},${d.bajos}`));
+    lines.push('');
+    lines.push('Marca,Key User,Canal,Rol,Promedio,Comentarios');
+    currentData.puntosDeDolor.casos.forEach(c => {
+      lines.push([c.marca, c.keyUser, c.canal, c.rol, n1(c.promedio), c.comentarios.join(' | ')].map(csvEscape).join(','));
+    });
+    lines.push('');
+
+    lines.push('REPORTE POR MARCA');
+    lines.push('Marca,Key User,Respuestas,Satisfacción,Tiempo,Calidad,Capacitación,General');
+    currentData.reportePorMarca.forEach(m => {
+      lines.push([m.marca, m.keyUser, m.respuestas, n1(m.promedioSatisfaccion), n1(m.promedioTiempo), n1(m.promedioCalidad), n1(m.promedioCapacitacion), n1(m.promedioGeneral)].map(csvEscape).join(','));
+    });
+
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-encuesta-ku-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function loadDashboard() {
+    const res = await fetch('/api/admin-data');
+    if (res.status === 401) {
+      loginScreen.style.display = 'flex';
+      dashboard.style.display = 'none';
+      return false;
+    }
+    const data = await res.json();
+    render(data);
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    return true;
+  }
+
+  async function doLogin() {
+    loginError.style.display = 'none';
+    loginBtn.disabled = true;
+    try {
+      const res = await fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordEl.value }),
+      });
+      if (!res.ok) {
+        loginError.style.display = 'block';
+        return;
+      }
+      passwordEl.value = '';
+      await loadDashboard();
+    } finally {
+      loginBtn.disabled = false;
+    }
+  }
+
+  loginBtn.addEventListener('click', doLogin);
+  passwordEl.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  document.getElementById('download-btn').addEventListener('click', downloadCSV);
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('/api/admin-logout', { method: 'POST' });
+    location.reload();
+  });
+
+  loadDashboard();
+</script>
+</body>
+</html>
