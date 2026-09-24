@@ -232,18 +232,15 @@
   <!-- Marca -->
   <div class="field" id="field-marca">
     <span class="field-label">Marca / Comercial</span>
-    <div class="card-grid card-grid-3">
+    <div class="card-grid card-grid-2">
       <input class="card-opt" type="radio" name="marca" id="m-honda" value="Honda">
-      <label class="card-btn" for="m-honda">Honda<small>Germán Tuc</small></label>
+      <label class="card-btn" for="m-honda">Honda<small>Germán Tuc · Astry Piox</small></label>
 
       <input class="card-opt" type="radio" name="marca" id="m-tvs" value="TVS / MotoPremium">
       <label class="card-btn" for="m-tvs">TVS / MotoPremium<small>Marcos Pérez</small></label>
 
-      <input class="card-opt" type="radio" name="marca" id="m-hero" value="Hero / Indy">
-      <label class="card-btn" for="m-hero">Hero / Indy<small>Pamela</small></label>
-
       <input class="card-opt" type="radio" name="marca" id="m-suzuki" value="Suzuki">
-      <label class="card-btn" for="m-suzuki">Suzuki<small>Anahí Velázquez</small></label>
+      <label class="card-btn" for="m-suzuki">Suzuki<small>Anahí Velázquez · Carla Pú</small></label>
 
       <input class="card-opt" type="radio" name="marca" id="m-cadisa" value="Cadisa / Motos Exclusivas">
       <label class="card-btn" for="m-cadisa">Cadisa / Motos Exclusivas<small>Martha Flores</small></label>
@@ -252,9 +249,11 @@
   </div>
 
   <!-- KU display -->
-  <div class="ku-block" id="ku-display">
-    <span class="field-label">Evaluando a</span>
+  <div class="ku-block field" id="ku-display">
+    <span class="field-label" id="ku-label">Evaluando a</span>
     <div id="ku-name-card" style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--radius);padding:13px 16px;font-size:15px;font-weight:600;color:var(--accent);"></div>
+    <div class="card-grid card-grid-2" id="ku-options"></div>
+    <span class="error-msg">Selecciona al Key User que vas a evaluar.</span>
   </div>
 
   <!-- Canal -->
@@ -365,11 +364,10 @@
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyu7CkOq9tGkVUrYJGCp0x4SOcETWBd5oVNp-lZ2NNGpRGSqMOj9xqXw2VLyO0M_-9X/exec";
 
   const KU_MAP = {
-    "Honda":                     "Germán Tuc",
-    "TVS / MotoPremium":         "Marcos Pérez",
-    "Hero / Indy":               "Pamela",
-    "Suzuki":                    "Anahí Velázquez",
-    "Cadisa / Motos Exclusivas": "Martha Flores"
+    "Honda":                     ["Germán Tuc", "Astry Piox"],
+    "TVS / MotoPremium":         ["Marcos Pérez"],
+    "Suzuki":                    ["Anahí Velázquez", "Carla Pú"],
+    "Cadisa / Motos Exclusivas": ["Martha Flores"]
   };
 
   // ── Star widget ──────────────────────────────────────────
@@ -418,8 +416,29 @@
   // ── Marca → mostrar KU ───────────────────────────────────
   document.querySelectorAll('input[name="marca"]').forEach(r => {
     r.addEventListener("change", () => {
-      document.getElementById("ku-name-card").textContent = KU_MAP[r.value] || "";
-      document.getElementById("ku-display").classList.add("visible");
+      const kus   = KU_MAP[r.value] || [];
+      const card  = document.getElementById("ku-name-card");
+      const opts  = document.getElementById("ku-options");
+      const block = document.getElementById("ku-display");
+      opts.innerHTML = "";
+      block.classList.remove("has-error");
+      if (kus.length > 1) {
+        document.getElementById("ku-label").textContent = "¿A qué Key User vas a evaluar?";
+        card.style.display = "none";
+        kus.forEach((name, i) => {
+          const id = `ku-opt-${i}`;
+          const input = document.createElement("input");
+          input.className = "card-opt"; input.type = "radio"; input.name = "ku"; input.id = id; input.value = name;
+          const label = document.createElement("label");
+          label.className = "card-btn"; label.htmlFor = id; label.textContent = name;
+          opts.append(input, label);
+        });
+      } else {
+        document.getElementById("ku-label").textContent = "Evaluando a";
+        card.style.display = "";
+        card.textContent = kus[0] || "";
+      }
+      block.classList.add("visible");
     });
   });
 
@@ -446,6 +465,8 @@
       ["canal", "field-canal"],
       ["rol",   "field-rol"],
     ];
+    const kusSel = KU_MAP[getRadio("marca")] || [];
+    if (kusSel.length > 1) radioFields.push(["ku", "ku-display"]);
     radioFields.forEach(([name, id]) => {
       if (!getRadio(name)) { document.getElementById(id).classList.add("has-error"); ok = false; }
     });
@@ -479,7 +500,7 @@
     const payload = {
       timestamp:        new Date().toISOString(),
       marca,
-      ku:               KU_MAP[marca] || "",
+      ku:               (KU_MAP[marca] || []).length > 1 ? getRadio("ku") : ((KU_MAP[marca] || [])[0] || ""),
       canal:            getRadio("canal"),
       rol:              getRadio("rol"),
       q_general:        starValues["q_general"],
